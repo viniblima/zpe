@@ -14,4 +14,6 @@ func SetupUserRoutes(api fiber.Router) {
 
 	user_routes.Get("/", middlewares.VerifyJWT, controllers.GetAllUsers)
 	user_routes.Get("/:id", middlewares.VerifyJWT, controllers.GetUserDetail)
+
+	user_routes.Patch("/:id", middlewares.VerifyJWTAdmin, controllers.UpdateUser)
 }

@@ -134,9 +134,39 @@ func GetUserDetail(c *fiber.Ctx) error {
 
 }
 
-type UserList struct {
-	ID    string `gorm:"primaryKey"`
-	Name  string
-	Email string
-	Roles []models.Role `gorm:"many2many:user_roles;" json:"Roles"`
+type IDSRole struct {
+	List []string `json:"List" validate:"required"`
+}
+
+// type ListIDRoles struct {
+// 	List []IDRole `validate:"required"`
+// }
+
+func UpdateUser(c *fiber.Ctx) error {
+	body := new(IDSRole)
+
+	c.BodyParser(&body)
+
+	err := validator.New().Struct(body)
+	if err != nil {
+		return c.Status(http.StatusUnprocessableEntity).JSON(handlers.NewJError(err))
+	}
+
+	var users models.User
+
+	id := c.Params("id")
+
+	errUser := database.DB.Db.Omit("Password").Model(&models.User{}).Where("ID = ?", id).First(&users).Error
+
+	if errUser != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "User not found",
+		})
+	}
+
+	var roles []models.Role
+
+	database.DB.Db.Where("ID IN ?", body.List).Find(&roles)
+
+	return c.Status(http.StatusOK).JSON(&roles)
 }

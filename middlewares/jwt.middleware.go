@@ -3,6 +3,7 @@ package middlewares
 import (
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,34 +21,30 @@ func VerifyJWT(c *fiber.Ctx) error {
 
 		if len(split) < 2 {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
-				"erro": "Invalid tag",
+				"error": "Invalid tag",
 			})
 		}
 
 		_, err := jwt.ParseWithClaims(split[1], claims, func(token *jwt.Token) (interface{}, error) {
-			_, ok := token.Method.(*jwt.SigningMethodECDSA)
-			if !ok {
-
-			}
 			return []byte(os.Getenv("PASSWORD_SECRET")), nil
 		})
 
 		if claims["sub"] != "auth" {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
-				"erro": "Invalid token",
+				"error": "Invalid token",
 			})
 		}
 
 		if err != nil {
 			return c.Status(401).JSON(fiber.Map{
-				"erro": err.Error(),
+				"error": err.Error(),
 			})
 
 		}
 
 	} else {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
-			"erro": "Invalid headers",
+			"error": "Invalid headers",
 		})
 	}
 
@@ -65,43 +62,53 @@ func VerifyJWTAdmin(c *fiber.Ctx) error {
 
 		if len(split) < 2 {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
-				"erro": "Invalid tag",
+				"error": "Invalid tag",
 			})
 		}
 
 		_, err := jwt.ParseWithClaims(split[1], claims, func(token *jwt.Token) (interface{}, error) {
-			_, ok := token.Method.(*jwt.SigningMethodECDSA)
-			if !ok {
-
-			}
 			return []byte(os.Getenv("PASSWORD_SECRET")), nil
 		})
 
 		if claims["sub"] != "auth" {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
-				"erro": "Invalid token",
+				"error": "Invalid token",
 			})
 		}
 
 		if err != nil {
-			return c.Status(401).JSON(fiber.Map{
-				"erro": err.Error(),
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+				"error": err.Error(),
 			})
 
 		}
 
 	} else {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
-			"erro": "Invalid headers",
+			"error": "Invalid headers",
 		})
 	}
 
-	c.Locals("userID", claims["id"])
+	c.Locals("userID", claims["ID"])
 
 	var userAdmin models.User
-	database.DB.Db.Model(models.User{}).Where("ID = ?", claims["id"]).Where(models.Role{
-		Level: 1,
-	}).Association("Roles").Find(&userAdmin)
+	errUser := database.DB.Db.Model(models.User{}).Where("id = ?", claims["ID"]).Preload("Roles").First(&userAdmin).Error
+
+	if errUser != nil {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"error": errUser.Error(),
+		})
+	}
+
+	indexRole := slices.IndexFunc(userAdmin.Roles, func(m *models.Role) bool {
+		return m.Level == 1 || m.Level == 2
+	})
+
+	if indexRole < 0 {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"error": "User doesnt have permission to do this",
+		})
+	}
 	c.Next()
 	return nil
 }
