@@ -18,6 +18,16 @@ type Dbinstance struct {
 
 var DB Dbinstance
 
+/*
+Esta função tem por objetivo iniciar o banco de dados com as devidas tabelas
+e inicia alguns preenchimentos necessários. Seguindo os seguintes passos:
+
+1. Conexao com o Banco de Dados;
+2. Rodar as migrações e, assim, iniciando a(s) tabela(s);
+3. Verificacao se há um usuário com o perfil de administrador para que
+o sistema não caia em um loop em que não há nenhum usuário que tenha
+pelo menos um perfil de modificacao de outros usuários;
+*/
 func ConnectDb() {
 
 	dsn := fmt.Sprintf(
@@ -65,7 +75,7 @@ func ConnectDb() {
 			Level: 1,
 		}
 
-		db.Create(newRole)
+		db.Create(&newRole)
 
 		var usersAdmin []models.User
 		db.Model(models.User{}).Where(models.Role{
@@ -80,7 +90,7 @@ func ConnectDb() {
 			}
 
 			db.Create(&newUser)
-			db.Model(&newUser).Association("Roles").Append(&newRole)
+			db.Model(&newUser).Omit("Roles.*").Association("Roles").Append(&newRole)
 		}
 	}
 
@@ -89,10 +99,11 @@ func ConnectDb() {
 	})
 
 	if roleFound == -1 {
-		db.Create(&models.Role{
+		newRole := models.Role{
 			Name:  "Modifier",
 			Level: 2,
-		})
+		}
+		db.Create(&newRole)
 	}
 
 	roleFound = slices.IndexFunc(roles, func(m models.Role) bool {
@@ -100,10 +111,11 @@ func ConnectDb() {
 	})
 
 	if roleFound == -1 {
-		db.Create(&models.Role{
+		newRole := models.Role{
 			Name:  "Watcher",
 			Level: 3,
-		})
+		}
+		db.Create(&newRole)
 	}
 
 	DB = Dbinstance{

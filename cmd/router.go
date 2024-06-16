@@ -6,6 +6,9 @@ import (
 	"github.com/viniblima/zpe/routes"
 )
 
+/*
+Esta funcao configura as rotas das APIs
+*/
 func setupRoutes(app *fiber.App) {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
@@ -17,6 +20,11 @@ func setupRoutes(app *fiber.App) {
 	setupV1Routes(api)
 }
 
+/*
+Esta funcao inicia as subrotas divida por versões
+para facilitar manutenabilidade
+e, na sequencia, divide por assuntos/tabelas
+*/
 func setupV1Routes(api fiber.Router) {
 	v1 := api.Group("/v1")
 

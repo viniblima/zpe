@@ -6,6 +6,9 @@ import (
 	gorm "gorm.io/gorm"
 )
 
+/*
+Modelo de usuário
+*/
 type User struct {
 	gorm.Model
 	ID       string  `gorm:"primaryKey"`

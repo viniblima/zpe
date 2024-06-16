@@ -12,6 +12,14 @@ import (
 	"github.com/viniblima/zpe/models"
 )
 
+/*
+Funcao que verifica o JWT enviado pelo client. A funcao se baseia no seguintes passos:
+ 1. Verificacao se o cabecalho da requisicao está correto; caso haja erro, retorna resposta com erro com o status 401;
+ 2. Tentativa de extrair e validar o JWT enviado; caso haja erro, retorna resposta com erro com o status 401
+ 3. Insercao de ID do usuário nos Locals para acesso à esse dado posteriormente
+    e para evitar que, mesmo que o JWT esteja correto,
+    haja um contorno e tentativa de uma requisicao ese passando por outro usuário
+*/
 func VerifyJWT(c *fiber.Ctx) error {
 
 	auth := c.Get("Authorization")
@@ -53,6 +61,16 @@ func VerifyJWT(c *fiber.Ctx) error {
 	return nil
 }
 
+/*
+Funcao que verifica o JWT enviado pelo client. A funcao se baseia no seguintes passos:
+ 1. Verificacao se o cabecalho da requisicao está correto; caso haja erro, retorna resposta com erro com o status 401;
+ 2. Tentativa de extrair e validar o JWT enviado; caso haja erro, retorna resposta com erro com o status 401
+ 3. Tentativa de verificacao das roles e níveis de permissao que o usuário possui para verrificar
+    se pode ou nao efetuar aquela acao; caso o usuário não possua retorna resposta com erro com o status 401;
+ 4. Insercao de ID do usuário nos Locals para acesso à esse dado posteriormente
+    e para evitar que, mesmo que o JWT esteja correto,
+    haja um contorno e tentativa de uma requisicao ese passando por outro usuário
+*/
 func VerifyJWTAdmin(c *fiber.Ctx) error {
 
 	auth := c.Get("Authorization")
@@ -101,14 +119,26 @@ func VerifyJWTAdmin(c *fiber.Ctx) error {
 	}
 
 	indexRole := slices.IndexFunc(userAdmin.Roles, func(m *models.Role) bool {
+		print(m.Level)
 		return m.Level == 1 || m.Level == 2
 	})
 
 	if indexRole < 0 {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
-			"error": "User doesnt have permission to do this",
+			"error": "User does not have permission to do this",
 		})
 	}
+
+	roleLevel := slices.IndexFunc(userAdmin.Roles, func(m *models.Role) bool {
+		return m.Level == 1
+	})
+
+	if roleLevel < 0 {
+		c.Locals("roleLevel", 2)
+	} else {
+		c.Locals("roleLevel", 1)
+	}
+
 	c.Next()
 	return nil
 }

@@ -8,11 +8,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+/*
+Funcao que criptografa a senha do usuário antes de ser salva no banco de dados
+*/
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
 }
 
+/*
+Funcao que verifica a senha criptografada salva no banco de dados com a senha enviada pelo client
+*/
 func CheckHash(hashedPassword string, password string) bool {
 
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
@@ -34,6 +40,9 @@ type AuthJWT struct {
 	Refresh JWT
 }
 
+/*
+Funcao que cria um token JWT para autorizacao de acesso às APIs protegidas
+*/
 func GenerateJWT(id string) (*AuthJWT, error) {
 
 	expireToken := time.Now().Add(time.Hour * 24)
