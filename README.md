@@ -36,3 +36,7 @@ Este projeto é uma aplicação em Go que serve de controle/autenticação de us
 ## Sobre
 
 Neste projeto, foi observado a necessidade de aprimorar alguns pontos. Visando a segurança em uma API que seria posta em ambiente de produção, foi-se criado um endpoint de login e algumas rotas (GET /roles, por exemplo) foram protegidas com um token JWT, ainda que não apontado nos requisitos do teste.
+
+## Arquivos auxiliares
+
+Foi adicionado um arquivo de collection das requisicoes para facilitar a utlizacao das APIs; o arquivo se chama zpe_collection.json; ele pode ser importado no Postman

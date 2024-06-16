@@ -1,0 +1,279 @@
+{
+	"info": {
+		"_postman_id": "206e8007-c3ce-41f8-ab07-3f8e5a8b9df2",
+		"name": "V1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12093930",
+		"_collection_link": "https://planetary-trinity-39008.postman.co/workspace/ZPE~6cdc7f29-6339-4917-950d-fda03b135cbd/collection/12093930-206e8007-c3ce-41f8-ab07-3f8e5a8b9df2?action=share&source=collection_link&creator=12093930"
+	},
+	"item": [
+		{
+			"name": "Roles",
+			"item": [
+				{
+					"name": "Get all roles",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT {{TOKEN_SUPERUSER}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/roles/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"roles",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Login Superuser",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"zpe@email.com\",\n    \"password\": \"@ZPE490zpe\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/users/signin",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"users",
+								"signin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"teste@teste.com\",\n    \"password\": \"teste123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/users/signin",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"users",
+								"signin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Sign Up",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"teste\",\n    \"email\": \"teste@teste.com\",\n    \"password\": \"teste123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/users/signup",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"users",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List of users",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT {{TOKEN_SUPERUSER}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/users/",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"users",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "User detail",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT {{TOKEN_SUPERUSER}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/users/7912ae36-dbd5-4162-9dbf-cdfd7d9952eb",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"users",
+								"7912ae36-dbd5-4162-9dbf-cdfd7d9952eb"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update user With Admin",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT {{TOKEN_SUPERUSER}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"List\": [\"84bad540-6100-4e8e-982a-0d4fc48557d1\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/users/9dbba5d7-2452-4b7f-9de5-90c06a1650a6",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"users",
+								"9dbba5d7-2452-4b7f-9de5-90c06a1650a6"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User With Watcher",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT {{TOKEN_WATCHER}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"List\": [\"1c73d3eb-5c33-42e4-8fc3-673b2f7f9698\", \"9866e431-9ef5-433a-a384-856a9329ad0b\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/users/6dc744fb-1bbd-421e-bad5-dc0844df583f",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"users",
+								"6dc744fb-1bbd-421e-bad5-dc0844df583f"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
