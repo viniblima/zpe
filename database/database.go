@@ -12,11 +12,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-type Dbinstance struct {
-	Db *gorm.DB
-}
-
-var DB Dbinstance
+var Db *gorm.DB
 
 /*
 Esta função tem por objetivo iniciar o banco de dados com as devidas tabelas
@@ -118,7 +114,5 @@ func ConnectDb() {
 		db.Create(&newRole)
 	}
 
-	DB = Dbinstance{
-		Db: db,
-	}
+	Db = db
 }

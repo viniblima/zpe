@@ -6,10 +6,15 @@ import (
 	"github.com/viniblima/zpe/routes"
 )
 
+type router struct {
+	userRouter routes.UserRouter
+	roleRouter routes.RoleRouter
+}
+
 /*
 Esta funcao configura as rotas das APIs
 */
-func setupRoutes(app *fiber.App) {
+func (router *router) setupRoutes(app *fiber.App) {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Accept",
@@ -17,7 +22,8 @@ func setupRoutes(app *fiber.App) {
 
 	api := app.Group("/api")
 
-	setupV1Routes(api)
+	// setupV1Routes(api)
+	router.setupV1Routes(api)
 }
 
 /*
@@ -25,9 +31,9 @@ Esta funcao inicia as subrotas divida por versões
 para facilitar manutenabilidade
 e, na sequencia, divide por assuntos/tabelas
 */
-func setupV1Routes(api fiber.Router) {
+func (router *router) setupV1Routes(api fiber.Router) {
 	v1 := api.Group("/v1")
 
-	routes.SetupUserRoutes(v1)
-	routes.SetupRoleRoutes(v1)
+	router.userRouter.SetupUserRoutes(v1)
+	router.roleRouter.SetupRoleRoutes(v1)
 }

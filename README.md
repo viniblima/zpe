@@ -40,3 +40,8 @@ Neste projeto, foi observado a necessidade de aprimorar alguns pontos. Visando a
 ## Arquivos auxiliares
 
 Foi adicionado um arquivo de collection das requisicoes para facilitar a utlizacao das APIs; o arquivo se chama zpe_collection.json; ele pode ser importado no Postman
+
+## Próximos passos
+
+1. Adicao de swagger (/swago)
+2. Criacao de DTOs

@@ -1,17 +1,29 @@
 package controllers
 
 import (
-	"errors"
 	"net/http"
 	"slices"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/viniblima/zpe/database"
 	"github.com/viniblima/zpe/handlers"
 	"github.com/viniblima/zpe/models"
-	"gorm.io/gorm"
+	"github.com/viniblima/zpe/repository"
 )
+
+type UserController interface {
+	SignIn(c *fiber.Ctx) error
+	SignUp(c *fiber.Ctx) error
+	GetAllUsers(c *fiber.Ctx) error
+	GetUserDetail(c *fiber.Ctx) error
+	RemoveUser(c *fiber.Ctx) error
+	UpdateUser(c *fiber.Ctx) error
+}
+
+type userController struct {
+	userRepo repository.UserRepository
+	roleRepo repository.RoleRepository
+}
 
 type LoginStruct struct {
 	Email    string `json:"Email" validate:"required,email"`
@@ -31,28 +43,13 @@ func extractUserObj(u models.User) map[string]interface{} {
 }
 
 /*
-Funcao que busca um usuário pelo email
-*/
-func getByEmail(email string) (models.User, error) {
-	item := models.User{}
-	var err error
-	dbResult := database.DB.Db.Where("email = ?", email).Preload("Roles").First(&item)
-
-	if errors.Is(dbResult.Error, gorm.ErrRecordNotFound) {
-		err = errors.New("user not found")
-	}
-
-	return item, err
-}
-
-/*
 Funcao de login do usuário, baseada nos seguintes passos:
 1. Validacao do body enviado pela requisicao;
 2. Tentativa de busca do usuário pelo email; caso haja erro, retorna resposta com erro com o status 401;
 3. Verificacao de password no body com o passowrd criptografado no banco de dados; caso haja erro, retorna resposta com erro com o status 401;
 4 Tentativa de geracao do token JWT para acesso às rotas protegidas; caso haja erro, retorna resposta com erro com o status 400
 */
-func SignIn(c *fiber.Ctx) error {
+func (controller *userController) SignIn(c *fiber.Ctx) error {
 
 	body := new(LoginStruct)
 
@@ -63,7 +60,7 @@ func SignIn(c *fiber.Ctx) error {
 		return c.Status(http.StatusUnprocessableEntity).JSON(handlers.NewJError(err))
 	}
 
-	u, errorU := getByEmail(body.Email)
+	u, errorU := controller.userRepo.GetUserByEmail(body.Email)
 
 	checked := handlers.CheckHash(u.Password, body.Password)
 
@@ -79,7 +76,7 @@ func SignIn(c *fiber.Ctx) error {
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"Auth": json,
-		"User": extractUserObj(u),
+		"User": extractUserObj(*u),
 	})
 
 }
@@ -99,7 +96,7 @@ Criacao de usuário com o body enviado. A funcao se baseia nos seguintes passos
 4. Geracao de JWT para autorizacao de acesso às rotas protegidas
 5. Envio de JWT e dados do usuário
 */
-func SignUp(c *fiber.Ctx) error {
+func (controller *userController) SignUp(c *fiber.Ctx) error {
 
 	body := new(SignUpStruct)
 
@@ -115,7 +112,9 @@ func SignUp(c *fiber.Ctx) error {
 		Email:    body.Email,
 	}
 
-	err = database.DB.Db.Create(&user).Error
+	// err = database.DB.Db.Create(&user).Error
+	newUser, err := controller.userRepo.CreateUser(&user)
+
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(handlers.NewJError(err))
 	}
@@ -127,7 +126,7 @@ func SignUp(c *fiber.Ctx) error {
 
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
 		"Auth": json,
-		"User": extractUserObj(user),
+		"User": extractUserObj(*newUser),
 	})
 }
 
@@ -135,10 +134,11 @@ func SignUp(c *fiber.Ctx) error {
 Listagem de usuários. A funcao se baseia nos seguintes passos:
 1. Tentativa de trazer listagem de todos os usuários presentes, com a omissão do dado Password; caso haja erro, retorna resposta com erro com o status 400
 */
-func GetAllUsers(c *fiber.Ctx) error {
-	var users []models.User
+func (controller *userController) GetAllUsers(c *fiber.Ctx) error {
+	// var users []models.User
 
-	err := database.DB.Db.Omit("Password").Model(&models.User{}).Preload("Roles").Find(&users).Error
+	// err := database.DB.Db.Omit("Password").Model(&models.User{}).Preload("Roles").Find(&users).Error
+	users, err := controller.userRepo.GetAllUsers()
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(err)
 	}
@@ -150,22 +150,44 @@ func GetAllUsers(c *fiber.Ctx) error {
 Funcao que traz os detalhes do usuário, com os seguintes passos:
 1. Tentativa de selecao do usuário no Banco de dados; caso haja erro, retorna resposta com erro com o status 400
 */
-func GetUserDetail(c *fiber.Ctx) error {
-	var users models.User
+func (controller *userController) GetUserDetail(c *fiber.Ctx) error {
 
 	id := c.Params("id")
 
-	err := database.DB.Db.Omit("Password").Model(&models.User{}).Where("ID = ?", id).Preload("Roles").First(&users).Error
+	// err := database.DB.Db.Omit("Password").Model(&models.User{}).Where("ID = ?", id).Preload("Roles").First(&users).Error
+	err, user := controller.userRepo.GetUserDetail(id)
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "User not found",
 		})
 	}
-	return c.Status(http.StatusOK).JSON(users)
+	return c.Status(http.StatusOK).JSON(user)
+}
+
+/*
+Funcao que deleta um usuário, com os seguintes passos:
+Tentativa de remocao do usuário no Banco de dados; caso haja erro, retorna resposta com erro com o status 400
+*/
+func (controller *userController) RemoveUser(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	err := controller.userRepo.RemoveUserByID(id)
+
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "User not found",
+		})
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{
+		"msg": "User removed",
+	})
 }
 
 type IDSRole struct {
-	List []string `json:"List" validate:"required"`
+	List  []string `json:"List" validate:"required"`
+	Name  string   `json:"Name" validate:"required"`
+	Email string   `json:"Email" validate:"required,email"`
 }
 
 /*
@@ -173,9 +195,10 @@ Funcao de atualizacao do dados do usuário, com os seguintes passos
 1. Validacao da estrutura enviada no body da requisicao; ; caso haja erro, retorna resposta com erro com o status 422 com o detalhamento do erro
 2. Busca pelo usuário com o ID enviado via parâmetro de URL
 3. Busca pelas roles enviadas via body da requisicao;
-4. Atualizacao das roles do usuário selecionadas pela listagem do body
+4. Atualizacao dos dados do usuário com os dados enviados via body;
+5. Atualizacao das roles do usuário selecionadas pela listagem do body
 */
-func UpdateUser(c *fiber.Ctx) error {
+func (controller *userController) UpdateUser(c *fiber.Ctx) error {
 	body := new(IDSRole)
 
 	c.BodyParser(&body)
@@ -185,11 +208,9 @@ func UpdateUser(c *fiber.Ctx) error {
 		return c.Status(http.StatusUnprocessableEntity).JSON(handlers.NewJError(err))
 	}
 
-	var users models.User
-
 	id := c.Params("id")
 
-	errUser := database.DB.Db.Model(&models.User{}).Where("ID = ?", id).First(&users).Error
+	user, errUser := controller.userRepo.GetUserByID(id)
 
 	if errUser != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -197,13 +218,11 @@ func UpdateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	var roles []models.Role
-
 	roleLevel := c.Locals("roleLevel").(int)
 
-	database.DB.Db.Where("ID IN ?", body.List).Find(&roles)
+	roles, _ := controller.roleRepo.GetRolesWithList(body.List)
 
-	indexRole := slices.IndexFunc(roles, func(m models.Role) bool {
+	indexRole := slices.IndexFunc(*roles, func(m models.Role) bool {
 		return m.Level < roleLevel
 	})
 
@@ -213,12 +232,14 @@ func UpdateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	database.DB.Db.Model(&users).Association("Roles").Clear()
+	user.Name = body.Name
+	user.Email = body.Email
 
-	database.DB.Db.Model(&users).Omit("Roles.*").Association("Roles").Append(&roles)
+	controller.userRepo.UpdateUser(user)
+	controller.userRepo.UpdateUserRoles(user, roles)
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 
-		"user": &users,
+		"User": extractUserObj(*user),
 	})
 }

@@ -8,9 +8,18 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/viniblima/zpe/database"
 	"github.com/viniblima/zpe/models"
+	"github.com/viniblima/zpe/repository"
 )
+
+type JWTMiddleware interface {
+	VerifyJWT(c *fiber.Ctx) error
+	VerifyJWTAdmin(c *fiber.Ctx) error
+}
+type jwtMiddleware struct {
+	userRepo repository.UserRepository
+	roleRepo repository.RoleRepository
+}
 
 /*
 Funcao que verifica o JWT enviado pelo client. A funcao se baseia no seguintes passos:
@@ -20,7 +29,7 @@ Funcao que verifica o JWT enviado pelo client. A funcao se baseia no seguintes p
     e para evitar que, mesmo que o JWT esteja correto,
     haja um contorno e tentativa de uma requisicao ese passando por outro usuário
 */
-func VerifyJWT(c *fiber.Ctx) error {
+func (controller *jwtMiddleware) VerifyJWT(c *fiber.Ctx) error {
 
 	auth := c.Get("Authorization")
 	claims := jwt.MapClaims{}
@@ -71,7 +80,7 @@ Funcao que verifica o JWT enviado pelo client. A funcao se baseia no seguintes p
     e para evitar que, mesmo que o JWT esteja correto,
     haja um contorno e tentativa de uma requisicao ese passando por outro usuário
 */
-func VerifyJWTAdmin(c *fiber.Ctx) error {
+func (controller *jwtMiddleware) VerifyJWTAdmin(c *fiber.Ctx) error {
 
 	auth := c.Get("Authorization")
 	claims := jwt.MapClaims{}
@@ -109,8 +118,9 @@ func VerifyJWTAdmin(c *fiber.Ctx) error {
 
 	c.Locals("userID", claims["ID"])
 
-	var userAdmin models.User
-	errUser := database.DB.Db.Model(models.User{}).Where("id = ?", claims["ID"]).Preload("Roles").First(&userAdmin).Error
+	// var userAdmin models.User
+	userAdmin, errUser := controller.userRepo.GetUserByID(c.Locals("userID").(string))
+	// userAdmin, errUser := database.DB.Db.Model(models.User{}).Where("id = ?", claims["ID"]).Preload("Roles").First(&userAdmin).Error
 
 	if errUser != nil {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{

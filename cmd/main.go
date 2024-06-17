@@ -12,10 +12,10 @@ Inicia o projeto com a seguinte ordem:
 3. Adiciona as rotas das APIs
 3. Inicia a subscricao na devida porta
 */
-func main() {
+func (router *router) main() {
 	database.ConnectDb()
 	app := fiber.New()
-	setupRoutes(app)
+	router.setupRoutes(app)
 
 	app.Listen(":3000")
 }
