@@ -10,6 +10,7 @@ Este projeto é uma aplicação em Go que serve de controle/autenticação de us
 - controllers/ - Arquivos de código que estão diretamente ligados à aplicação principal, acessados via endpoints
 - database/ - Arquivos de código interno do projeto que inicia e instancia o banco de dados
 - routes/ - Definições de API e documentos
+- repository/ - Arquivos de consulta e update no Banco de dados
 - handlers/ - Arquivos de código com funções auxiliares que podem ser acessadas em outros packages
 - middlewares/ - Arquivos de código com funções que podem ser executadas antes de própriamente acessar os controllers em um endpoint. Validador de token, por exemplo
 - models/ - Arquivos de modelos para o banco de dados
